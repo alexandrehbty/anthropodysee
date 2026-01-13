@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Le Projet | L'Odyssée Anthropologique</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --slate-950: #020617;
+            --slate-900: #0f172a;
+            --slate-100: #f8fafc;
+            --blue-accent: #3b82f6;
+            --fluid-bezier: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--slate-100);
+            color: var(--slate-900);
+            scroll-behavior: smooth;
+        }
+        h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+        
+        .section-reveal {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s ease-out;
+        }
+        .section-reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .logo-svg {
+            width: 40px;
+            height: 40px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: all 0.4s var(--fluid-bezier);
+        }
+
+        /* --- Style du Lecteur Audio --- */
+        .audio-container {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 2.5rem;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+            position: relative;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            background: #f1f5f9;
+            border-radius: 2px;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            background: var(--blue-accent);
+            margin-top: -5px;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .audio-visualizer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            height: 40px;
+            margin-bottom: 1.5rem;
+        }
+
+        .bar {
+            width: 3px;
+            height: 8px;
+            background: var(--blue-accent);
+            border-radius: 10px;
+            opacity: 0.2;
+            transition: all 0.3s ease;
+        }
+
+        .playing .bar {
+            opacity: 0.8;
+            animation: wave 1.2s infinite ease-in-out;
+        }
+
+        @keyframes wave {
+            0%, 100% { height: 8px; }
+            50% { height: 32px; }
+        }
+
+        /* Modale Transcription */
+        #transcription-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, 0.85);
+            backdrop-filter: blur(10px);
+        }
+        #transcription-modal.active { display: flex; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 w-full p-6 z-50 flex justify-between items-center glass-header">
+        <div class="flex items-center space-x-4 group cursor-pointer" onclick="window.location.href='home.html'">
+            <div class="group-hover:text-blue-600 group-hover:scale-105 transition-all duration-300">
+                <svg viewBox="0 0 24 24" class="logo-svg text-slate-900">
+                    <circle cx="12" cy="12" r="10" stroke-dasharray="2 2" class="opacity-20"></circle>
+                    <path d="M2 12c4 0 4-4 8-4s4 4 8 4 4-4 8-4"></path>
+                    <path d="M2 16c4 0 4-4 8-4s4 4 8 4 4-4 8-4" class="opacity-40"></path>
+                    <path d="M12 2v4M12 18v4M2 12h2M18 12h4" class="opacity-20"></path>
+                </svg>
+            </div>
+            <h1 class="text-xl font-bold tracking-tight uppercase text-slate-900 transition-colors duration-300 group-hover:text-blue-600">Odyssée Anthropologique</h1>
+        </div>
+        <nav class="hidden lg:flex space-x-10 text-[11px] font-bold uppercase tracking-[0.2em]">
+            <a href="home.html" class="text-slate-500 hover:text-slate-900 transition">Accueil</a>
+            <a href="projet.html" class="text-blue-600">Le Projet</a>
+            <a href="musee.html" class="text-slate-500 hover:text-slate-900 transition">Musée Virtuel</a>
+        </nav>
+        <a href="index.html" class="bg-slate-900 text-white px-8 py-2 rounded-full text-[11px] font-bold hover:bg-blue-600 transition uppercase tracking-widest shadow-xl">
+            Explorer la Map
+        </a>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="pt-48 pb-24 px-6 max-w-6xl mx-auto border-b border-slate-200">
+        <div class="max-w-4xl">
+            <span class="text-blue-600 font-bold uppercase tracking-[0.4em] text-[10px] mb-6 block">Analyse & Méthodologie</span>
+            <h1 class="text-6xl md:text-8xl mb-10 leading-[1.1] text-slate-950">L'Évolution de la <br><span class="italic font-normal text-slate-500">Conscience Maritime</span></h1>
+            <p class="text-2xl md:text-3xl font-light leading-relaxed text-slate-600 max-w-3xl">
+                De l'imaginaire sauvage à la préservation raisonnée : comprendre la trajectoire de notre rapport à l'océan.
+            </p>
+        </div>
+    </section>
+
+    <!-- Section 1 : Problématique -->
+    <section class="py-32 px-6 max-w-6xl mx-auto grid lg:grid-cols-12 gap-16 section-reveal">
+        <div class="lg:col-span-7">
+            <h2 class="text-4xl italic mb-8 text-slate-950 font-serif">Approche Anthropologique</h2>
+            <div class="w-16 h-1 bg-blue-600 mb-12"></div>
+            <div class="space-y-6 text-slate-800 text-lg font-light leading-relaxed">
+                <p>
+                    Cette étude interroge la transition des systèmes de représentations : comment l'océan est-il passé d'un <strong>espace de subsistance</strong> magico-religieux à un <strong>espace de connaissance</strong> rationalisé ?
+                </p>
+                <p>
+                    En analysant 15 chefs-d'œuvre mondiaux, nous mettons en lumière le glissement du regard humain. La mer n'est plus seulement un réservoir de ressources ou un décor, mais devient le cœur battant d'une conscience écologique globale.
+                </p>
+            </div>
+        </div>
+        <div class="lg:col-span-5 flex items-center">
+            <div class="aspect-square w-full rounded-3xl shadow-sm flex items-center justify-center bg-slate-200 relative group overflow-hidden border border-slate-200">
+                 <div class="absolute inset-0 bg-slate-900/5 group-hover:bg-transparent transition-colors"></div>
+                 <p class="text-slate-400 italic text-sm p-12 text-center"></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 2 : Démarche Scientifique (Audio à Droite) -->
+    <section class="py-32 bg-white border-y border-slate-200 section-reveal">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-24 items-center">
+                
+                <div>
+                    <span class="text-blue-600 font-bold uppercase tracking-[0.3em] text-[10px] mb-6 block">L'analyse</span>
+                    <h2 class="text-4xl md:text-5xl mb-8 leading-tight font-serif italic text-slate-950">Comprendre notre <br>démarche scientifique</h2>
+                    <p class="text-lg text-slate-600 leading-relaxed mb-10 font-light">
+                        Le rapport à la mer ne s'éloigne pas de l'homme, il converge vers sa conscience. Nous partons d'un imaginaire extérieur pour arriver à un engagement écologique intérieur.
+                    </p>
+                    
+                    <div class="p-6 bg-slate-50 border border-slate-100 rounded-2xl">
+                        <h4 class="text-slate-900 font-bold uppercase text-[10px] tracking-widest mb-2 text-left">Thématiques abordées</h4>
+                        <p class="text-xs text-slate-500 italic text-left">Convergence centripète, syndrome du rationnel, dématérialisation du lien Homme-Mer.</p>
+                    </div>
+                </div>
+
+                <!-- Lecteur Audio 1 -->
+                <div class="audio-container" id="audioCard1">
+                    <div class="flex items-center space-x-6 mb-8">
+                        <button onclick="toggleAudio('Audio1')" class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-xl hover:scale-105 transition-transform focus:outline-none">
+                            <svg id="play-icon-Audio1" class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4v12l10-6L7 4z"></path></svg>
+                            <svg id="pause-icon-Audio1" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+                        </button>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">Analyse Scientifique</h3>
+                            <p class="text-[10px] text-blue-500 uppercase tracking-widest font-bold">Théorie & Médiation</p>
+                        </div>
+                    </div>
+                    <div class="audio-visualizer">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                    <div class="space-y-4">
+                        <input type="range" id="seek-bar-Audio1" value="0" step="0.1">
+                        <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <span id="current-time-Audio1">0:00</span>
+                            <span id="duration-Audio1">0:00</span>
+                        </div>
+                    </div>
+                    <audio id="mainAudio1"><source src="votre-audio-scientifique.mp3" type="audio/mpeg"></audio>
+                    <div class="mt-8 pt-6 border-t border-slate-100 flex justify-center">
+                        <button onclick="openTranscription('scientifique')" class="text-[9px] uppercase tracking-[0.2em] font-bold text-blue-600 hover:text-slate-900 transition">Lire la transcription</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Section 3 : Démarche Technique (Audio à Gauche) -->
+    <section class="py-32 bg-slate-100/50 section-reveal">
+        <div class="max-w-6xl mx-auto px-6">
+            <div class="grid lg:grid-cols-2 gap-24 items-center">
+                
+                <!-- Lecteur Audio 2 (Technique) -->
+                <div class="audio-container" id="audioCard2">
+                    <div class="flex items-center space-x-6 mb-8">
+                        <button onclick="toggleAudio('Audio2')" class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-xl hover:scale-105 transition-transform focus:outline-none">
+                            <svg id="play-icon-Audio2" class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4v12l10-6L7 4z"></path></svg>
+                            <svg id="pause-icon-Audio2" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+                        </button>
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-900">Analyse Technique</h3>
+                            <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">WebGL & Architecture</p>
+                        </div>
+                    </div>
+                    <div class="audio-visualizer">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                    </div>
+                    <div class="space-y-4">
+                        <input type="range" id="seek-bar-Audio2" value="0" step="0.1">
+                        <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <span id="current-time-Audio2">0:00</span>
+                            <span id="duration-Audio2">0:00</span>
+                        </div>
+                    </div>
+                    <audio id="mainAudio2"><source src="votre-audio-technique.mp3" type="audio/mpeg"></audio>
+                    <div class="mt-8 pt-6 border-t border-slate-100 flex justify-center">
+                        <button onclick="openTranscription('technique')" class="text-[9px] uppercase tracking-[0.2em] font-bold text-slate-900 hover:text-blue-600 transition">Lire la transcription</button>
+                    </div>
+                </div>
+
+                <!-- Explication Technique (Droite) -->
+                <div>
+                    <span class="text-blue-600 font-bold uppercase tracking-[0.3em] text-[10px] mb-6 block text-left">La méthode</span>
+                    <h2 class="text-4xl md:text-5xl mb-8 leading-tight font-serif italic text-slate-950 text-left">Comprendre notre <br>démarche technique</h2>
+                    <p class="text-lg text-slate-600 leading-relaxed mb-10 font-light text-left">
+                        Pour traduire cette odyssée en expérience web, nous avons opté pour une architecture sur mesure. Le globe 3D, moteur central du hub, utilise la technologie WebGL pour une fluidité optimale sans sacrifier la précision géographique des 15 œuvres sélectionnées.
+                    </p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-5 bg-white border border-slate-200 rounded-2xl">
+                            <h4 class="text-blue-600 font-bold uppercase text-[9px] tracking-widest mb-2 text-left">Moteur 3D</h4>
+                            <p class="text-[11px] text-slate-500 text-left">Three.js & Globe.gl pour un rendu cinétique immersif.</p>
+                        </div>
+                        <div class="p-5 bg-white border border-slate-200 rounded-2xl">
+                            <h4 class="text-blue-600 font-bold uppercase text-[9px] tracking-widest mb-2 text-left">Performance</h4>
+                            <p class="text-[11px] text-slate-500 text-left">Code Vanilla JS pour une liberté totale et un temps de chargement éclair.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Modale de Transcription -->
+    <div id="transcription-modal">
+        <div class="bg-white w-full max-w-2xl mx-4 p-10 rounded-[2.5rem] shadow-2xl relative max-h-[80vh] overflow-y-auto">
+            <button onclick="closeTranscription()" class="absolute top-8 right-8 text-slate-400 hover:text-slate-950 transition">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            <h3 id="modal-title" class="text-3xl font-serif italic mb-8 text-slate-950">Transcription</h3>
+            <div id="modal-content" class="text-slate-600 leading-relaxed space-y-6 text-base font-light">
+                <!-- Rempli par JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Objectifs -->
+    <section class="py-32 px-6 max-w-6xl mx-auto section-reveal">
+        <h2 class="text-4xl text-center mb-20 font-serif italic text-slate-950">Objectifs de la Recherche</h2>
+        <div class="grid md:grid-cols-3 gap-16">
+            <div class="text-center group">
+                <div class="text-6xl font-serif italic text-slate-200 group-hover:text-blue-600 transition-colors duration-500 mb-6">15</div>
+                <h3 class="font-bold uppercase tracking-widest text-xs mb-4">Unités d'Analyse</h3>
+                <p class="text-sm text-slate-500 leading-relaxed max-w-[250px] mx-auto">Chaque œuvre est traitée comme un symptôme d'une culture et d'un paradigme.</p>
+            </div>
+            <div class="text-center group">
+                <div class="text-6xl font-serif italic text-slate-200 group-hover:text-blue-600 transition-colors duration-500 mb-6">05</div>
+                <h3 class="font-bold uppercase tracking-widest text-xs mb-4">Aires Géoculturelles</h3>
+                <p class="text-sm text-slate-500 leading-relaxed max-w-[250px] mx-auto">Une analyse comparative pour dégager des invariants anthropologiques.</p>
+            </div>
+            <div class="text-center group">
+                <div class="text-6xl font-serif italic text-slate-200 group-hover:text-blue-600 transition-colors duration-500 mb-6">01</div>
+                <h3 class="font-bold uppercase tracking-widest text-xs mb-4">Synthèse Finale</h3>
+                <p class="text-sm text-slate-500 leading-relaxed max-w-[250px] mx-auto">Relier l'histoire de l'art à la mutation de la conscience écologique.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 text-white py-24 px-6">
+        <div class="max-w-6xl mx-auto text-center">
+            <div class="flex items-center justify-center space-x-4 mb-12 group cursor-pointer" onclick="window.location.href='home.html'">
+                <div class="transition-all duration-300 group-hover:scale-110 group-hover:text-blue-400 text-white">
+                    <svg viewBox="0 0 24 24" class="w-8 h-8 fill-none stroke-current stroke-[1.5]">
+                        <circle cx="12" cy="12" r="10" stroke-dasharray="2 2" class="opacity-20"></circle>
+                        <path d="M2 12c4 0 4-4 8-4s4 4 8 4 4-4 8-4"></path>
+                    </svg>
+                </div>
+                <h4 class="text-sm font-bold uppercase tracking-[0.3em]">Odyssée Anthropologique</h4>
+            </div>
+            <p class="text-slate-500 text-xs uppercase tracking-widest mb-12">Étude sur les Ruptures Épistémologiques du rapport Homme-Mer</p>
+            <div class="pt-8 border-t border-white/5 text-[9px] text-slate-700 uppercase tracking-[0.4em]">
+                © 2026 — Projet de Médiation Culturelle Numérique
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Reveal Animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+        document.querySelectorAll('.section-reveal').forEach(el => observer.observe(el));
+
+        // --- GESTION AUDIO UNIFIÉE ---
+        const players = {
+            Audio1: { audio: document.getElementById('mainAudio1'), card: document.getElementById('audioCard1'), seekBar: document.getElementById('seek-bar-Audio1'), current: document.getElementById('current-time-Audio1'), duration: document.getElementById('duration-Audio1'), play: document.getElementById('play-icon-Audio1'), pause: document.getElementById('pause-icon-Audio1') },
+            Audio2: { audio: document.getElementById('mainAudio2'), card: document.getElementById('audioCard2'), seekBar: document.getElementById('seek-bar-Audio2'), current: document.getElementById('current-time-Audio2'), duration: document.getElementById('duration-Audio2'), play: document.getElementById('play-icon-Audio2'), pause: document.getElementById('pause-icon-Audio2') }
+        };
+
+        function formatTime(secs) {
+            if (!isFinite(secs)) return "0:00";
+            const min = Math.floor(secs / 60);
+            const sec = Math.floor(secs % 60);
+            return `${min}:${sec < 10 ? '0' : ''}${sec}`;
+        }
+
+        async function toggleAudio(id) {
+            const p = players[id];
+            try {
+                if (p.audio.paused) {
+                    // Mettre en pause les autres lecteurs avant d'en lancer un nouveau
+                    Object.keys(players).forEach(otherId => { if(otherId !== id) players[otherId].audio.pause(); });
+                    await p.audio.play();
+                } else {
+                    p.audio.pause();
+                }
+            } catch (err) { if (err.name !== 'AbortError') console.error("Audio error:", err); }
+        }
+
+        // Configuration des événements pour chaque lecteur
+        Object.keys(players).forEach(id => {
+            const p = players[id];
+            p.audio.onplay = () => { p.card.classList.add('playing'); p.play.classList.add('hidden'); p.pause.classList.remove('hidden'); };
+            p.audio.onpause = () => { p.card.classList.remove('playing'); p.play.classList.remove('hidden'); p.pause.classList.add('hidden'); };
+            p.audio.addEventListener('timeupdate', () => {
+                if (!isFinite(p.audio.duration)) return;
+                p.seekBar.value = (p.audio.currentTime / p.audio.duration) * 100;
+                p.current.innerText = formatTime(p.audio.currentTime);
+            });
+            p.audio.addEventListener('loadedmetadata', () => { p.duration.innerText = formatTime(p.audio.duration); });
+            p.seekBar.addEventListener('input', () => {
+                if (!isFinite(p.audio.duration)) return;
+                p.audio.currentTime = (parseFloat(p.seekBar.value) / 100) * p.audio.duration;
+            });
+        });
+
+        // --- GESTION TRANSCRIPTION ---
+        const transcripts = {
+            scientifique: { title: "Transcription : Démarche Scientifique", content: "<p>Notre recherche met en lumière un mouvement centripète : la mer, autrefois force extérieure et sacrée, devient un espace intérieur de conscience. Si à la Préhistoire la mer est une frontière nourricière, elle devient à la Renaissance un objet de mesure, avant de devenir aujourd'hui un espace de responsabilité écologique.</p>" },
+            technique: { title: "Transcription : Démarche Technique", content: "<p>Le choix du WebGL et de Three.js permet de manipuler 15 œuvres dans un espace sphérique sans latence. L'architecture est 'Data-Driven' : chaque point sur le globe est relié à une fiche d'œuvre via un ID unique, permettant une transition fluide vers le musée virtuel.</p>" }
+        };
+
+        function openTranscription(type) {
+            const modal = document.getElementById('transcription-modal');
+            document.getElementById('modal-title').innerText = transcripts[type].title;
+            document.getElementById('modal-content').innerHTML = transcripts[type].content;
+            modal.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeTranscription() {
+            document.getElementById('transcription-modal').classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+    </script>
+</body>
+</html>
