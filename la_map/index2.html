@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Globe Interactif | Odyssée Anthropologique</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/globe.gl"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --slate-950: #020617;
+            --slate-900: #0f172a;
+            --slate-100: #f8fafc;
+            --blue-accent: #3b82f6;
+            --light-gray: rgba(229, 231, 235, 0.45);
+        }
+        body { 
+            margin: 0; 
+            background-color: var(--slate-950); 
+            color: white; 
+            font-family: 'Inter', sans-serif; 
+            overflow: hidden; 
+        }
+        h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+        canvas { display: block; }
+        
+        .glass-header {
+            background: rgba(2, 6, 23, 0.7);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .ui-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2rem;
+        }
+
+        .logo-svg {
+            width: 32px;
+            height: 32px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+        }
+        @media (min-width: 768px) { .logo-svg { width: 40px; height: 40px; } }
+
+        .timeline-gradient { 
+            background: linear-gradient(to top, rgba(2, 6, 23, 1) 0%, rgba(2, 6, 23, 0) 100%); 
+        }
+
+        /* Timeline Mobile First : Scrollable sur petit écran */
+        .timeline-container {
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            width: 100%;
+        }
+        .timeline-container::-webkit-scrollbar { display: none; }
+
+        .timeline-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 20px;
+            height: 120px;
+            min-width: 750px; /* Force la largeur pour le scroll mobile */
+        }
+        @media (min-width: 1024px) {
+            .timeline-wrapper { min-width: auto; justify-content: space-between; padding: 0 40px; }
+        }
+
+        .timeline-line {
+            position: absolute;
+            top: 50%;
+            left: 50px;
+            right: 50px;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 1;
+        }
+        .timeline-item {
+            position: relative;
+            z-index: 2;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            width: 140px;
+        }
+        .timeline-dot {
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            margin: 10px 0;
+            transition: all 0.4s ease;
+        }
+        .timeline-date {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+        .timeline-period {
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.3);
+            letter-spacing: 2px;
+            margin-top: 5px;
+        }
+        .timeline-item.active .timeline-dot {
+            background: white;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            transform: scale(1.5);
+        }
+        .timeline-item.active .timeline-period,
+        .timeline-item.active .timeline-date {
+            color: white;
+        }
+
+        /* Bulle d'info responsive */
+        #info-bubble { 
+            display: none; 
+            transform: translate(-50%, -110%); 
+            z-index: 1000; 
+            position: absolute; 
+            width: 280px;
+        }
+        @media (min-width: 768px) { #info-bubble { width: 320px; } }
+
+        #loading-screen { 
+            position: fixed; 
+            inset: 0; 
+            background: #020617; 
+            z-index: 9999; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            transition: opacity 1s ease; 
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Ecran de chargement -->
+    <div id="loading-screen">
+        <div class="w-12 h-12 border-2 border-white/10 border-t-white rounded-full animate-spin mb-6"></div>
+        <p class="text-white font-bold tracking-[0.4em] uppercase text-[10px]">Initialisation de l'Odyssée</p>
+    </div>
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 flex justify-between items-center glass-header">
+        <div class="flex items-center space-x-3 md:space-x-4 group cursor-pointer" onclick="window.location.href='home.html'">
+            <div class="group-hover:text-blue-400 group-hover:scale-105 transition-all duration-300">
+                <svg viewBox="0 0 24 24" class="logo-svg text-white">
+                    <circle cx="12" cy="12" r="10" stroke-dasharray="2 2" class="opacity-20"></circle>
+                    <path d="M2 12c4 0 4-4 8-4s4 4 8 4 4-4 8-4"></path>
+                    <path d="M2 16c4 0 4-4 8-4s4 4 8 4 4-4 8-4" class="opacity-40"></path>
+                    <path d="M12 2v4M12 18v4M2 12h2M18 12h4" class="opacity-20"></path>
+                </svg>
+            </div>
+            <h1 class="text-sm md:text-xl font-bold tracking-tight uppercase text-white transition-colors duration-300 group-hover:text-blue-400 truncate max-w-[150px] md:max-w-none">Odyssée Anthropologique</h1>
+        </div>
+        <nav class="hidden lg:flex space-x-10 text-[11px] font-bold uppercase tracking-[0.2em]">
+            <a href="../index - Copie.html" class="text-slate-400 hover:text-white transition">Accueil</a>
+            <a href="../le_projet/index - Copie.html" class="text-slate-400 hover:text-white transition">Le Projet</a>
+            <a href="#" class="text-white border-b border-white pb-1">Explorer la Map</a>
+        </nav>
+        <a href="../musee_virtuel/test_mobile_first.html" class="border border-white/20 text-white px-4 md:px-8 py-2 rounded-full text-[9px] md:text-[11px] font-bold hover:bg-white hover:text-slate-950 transition uppercase tracking-widest shadow-xl whitespace-nowrap">
+            Musée Virtuel
+        </a>
+    </header>
+
+    <!-- UI Panel Sidebar (Adaptatif) -->
+    <div class="fixed inset-0 pointer-events-none z-40 flex items-center px-6 md:px-12">
+        <div class="max-w-xs md:max-w-sm pointer-events-auto">
+            <div class="ui-panel p-6 md:p-10 shadow-2xl border-l-4 border-white/30 text-left">
+                <span class="text-slate-400 font-bold uppercase tracking-[0.3em] text-[8px] md:text-[9px] mb-3 md:mb-4 block">Époque Actuelle</span>
+                <h2 id="current-period-title" class="text-2xl md:text-4xl font-serif mb-4 md:mb-6 text-white italic leading-tight">...</h2>
+                <p id="current-period-desc" class="text-xs md:text-sm text-slate-300 leading-relaxed font-light italic opacity-90">Chargement...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Globe Container -->
+    <div id="globeViz" class="w-full h-screen"></div>
+
+    <!-- Info Bubble -->
+    <div id="info-bubble" class="ui-panel p-6 md:p-8 shadow-2xl border-white/10">
+        <span id="bubble-civilization" class="text-[8px] md:text-[9px] uppercase tracking-[0.3em] text-slate-400 font-bold mb-2 block">Civilisation</span>
+        <h3 id="bubble-title" class="text-xl md:text-2xl font-serif italic text-white mb-3 md:mb-4">Nom</h3>
+        <p id="bubble-text" class="text-xs md:text-sm text-slate-300 mb-6 md:mb-8 font-light leading-relaxed">Description...</p>
+        <button id="btn-discover" class="w-full py-3 md:py-4 bg-white hover:bg-slate-200 text-slate-950 rounded-xl font-bold transition uppercase tracking-widest text-[9px] md:text-[10px] shadow-xl">
+            Découvrir l'œuvre
+        </button>
+    </div>
+
+    <!-- Footer Timeline -->
+    <footer class="fixed bottom-0 left-0 w-full z-50 p-4 md:p-8 timeline-gradient">
+        <div class="max-w-5xl mx-auto timeline-container">
+            <div class="timeline-wrapper">
+                <div class="timeline-line"></div>
+                <div class="timeline-item active" id="item-prehistory" onclick="selectPeriod('prehistory')">
+                    <span class="timeline-date">-30 000 BP</span>
+                    <div class="timeline-dot"></div>
+                    <span class="timeline-period">Préhistoire</span>
+                </div>
+                <div class="timeline-item" id="item-antiquity" onclick="selectPeriod('antiquity')">
+                    <span class="timeline-date">-3400 / 475</span>
+                    <div class="timeline-dot"></div>
+                    <span class="timeline-period">Antiquité</span>
+                </div>
+                <div class="timeline-item" id="item-middleages" onclick="selectPeriod('middleages')">
+                    <span class="timeline-date">475 / 1492</span>
+                    <div class="timeline-dot"></div>
+                    <span class="timeline-period">Moyen-Âge</span>
+                </div>
+                <div class="timeline-item" id="item-renaissance" onclick="selectPeriod('renaissance')">
+                    <span class="timeline-date">1492 / 1792</span>
+                    <div class="timeline-dot"></div>
+                    <span class="timeline-period">Renaissance</span>
+                </div>
+                <div class="timeline-item" id="item-contemporary" onclick="selectPeriod('contemporary')">
+                    <span class="timeline-date">1792 / Présent</span>
+                    <div class="timeline-dot"></div>
+                    <span class="timeline-period">Contemporain</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- BASE DE DONNÉES AVEC URLS PERSONNALISABLES ---
+        const periodsData = {
+            prehistory: {
+                title: "I. Préhistoire",
+                countryNames: ["France", "South Korea", "Norway"],
+                desc: "L'époque de la survie et du sacré. La mer est perçue comme une frontière liminale nourricière.",
+                works: {
+                    "France": { id: 1, name: "Grotte Cosquer", civil: "Gravettien", text: "Sanctuaire immergé à Marseille.", lat: 43.20, lon: 5.35, url: "../musee_virtuel/test_mobile_first.html" },
+                    "South Korea": { id: 2, name: "Petroglyphes de Bangudae", civil: "Néolithique", text: "Site d'Ulsan sur la rivière Daegok.", lat: 35.61, lon: 129.20, url: "../musee_virtuel/test_mobile_first.html#2" },
+                    "Norway": { id: 3, name: "Peche au fletan (Alta)", civil: "Chasseurs Arctiques", text: "Site classé UNESCO en Laponie.", lat: 69.95, lon: 23.27, url: "../musee_virtuel/test_mobile_first.html#3" }
+                }
+            },
+            antiquity: {
+                title: "II. Antiquité",
+                countryNames: ["Greece", "Peru", "China"],
+                desc: "Le passage du chaos à la maîtrise. La mer devient un espace de danger divin et de commerce.",
+                works: {
+                    "Greece": { id: 4, name: "Ulysse et les Sirenes", civil: "Grèce Antique", text: "Vase attique représentant le Logos face aux Sirènes.", lat: 37.98, lon: 23.72, url: "../musee_virtuel/test_mobile_first.html#4" },
+                    "Peru": { id: 5, name: "Vase Pecheur Moche", civil: "Culture Moche", text: "Céramique cultuelle de la côte péruvienne.", lat: -8.11, lon: -79.03, url: "../musee_virtuel/test_mobile_first.html#5" },
+                    "China": { id: 6, name: "Miroir Han", civil: "Dynastie Han", text: "Bronze représentant la Mer Orientale.", lat: 34.26, lon: 108.94, url: "../musee_virtuel/test_mobile_first.html#6" }
+                }
+            },
+            middleages: {
+                title: "III. Moyen-Âge",
+                countryNames: ["Italy", "France", "China"],
+                desc: "Cartographier la Création. La mer relie les mondes connus de l'Oekoumène.",
+                works: {
+                    "Italy": { id: 7, name: "Tabula Rogeriana", civil: "Monde Arabe", text: "Synthèse scientifique d'Al-Idrisi réalisée à Palerme.", lat: 38.11, lon: 13.36, url: "../musee_virtuel/test_mobile_first.html#7" },
+                    "France": { id: 8, name: "Tapisserie de Bayeux", civil: "Normands", text: "La conquête de la Manche en 1066.", lat: 49.27, lon: -0.70, url: "../musee_virtuel/test_mobile_first.html#8" },
+                    "China": { id: 9, name: "Album de l'Eau", civil: "Dynastie Song", text: "Contemplation du Qi par Ma Yuan.", lat: 30.27, lon: 120.15, url: "../musee_virtuel/test_mobile_first.html#9" }
+                }
+            },
+            renaissance: {
+                title: "IV. Renaissance",
+                countryNames: ["Turkey", "Belgium", "Japan"],
+                desc: "L'horizon conquis. La mer est mesurée, quadrillée et domestiquée par la raison.",
+                works: {
+                    "Turkey": { id: 10, name: "Carte de Piri Reis", civil: "Empire Ottoman", text: "Fragment du monde tracé à Istanbul.", lat: 41.01, lon: 28.98, url: "../musee_virtuel/test_mobile_first.html#10" },
+                    "Belgium": { id: 11, name: "La Chute d'Icare", civil: "Renaissance Flamande", text: "Vision cynique de Pieter Brueghel l'Ancien.", lat: 50.84, lon: 4.35, url: "../musee_virtuel/test_mobile_first.html#11" },
+                    "Japan": { id: 12, name: "Pins et Vagues", civil: "École Kano", text: "Décor des châteaux des Shoguns.", lat: 35.67, lon: 139.76, url: "../musee_virtuel/test_mobile_first.html#12" }
+                }
+            },
+            contemporary: {
+                title: "V. Contemporain",
+                countryNames: ["Japan", "Germany", "United States of America"],
+                desc: "Le Sublime et la Fragilité. L'homme redécouvre la puissance de l'océan face à sa finitude.",
+                works: {
+                    "Japan": { id: 13, name: "La Grande Vague", civil: "Hokusai", text: "Estampe iconique de Kanagawa.", lat: 35.31, lon: 139.46, url: "../musee_virtuel/test_mobile_first.html#13" },
+                    "Germany": { id: 14, name: "Le Moine (Friedrich)", civil: "Romantisme", text: "Contemplation du néant à Berlin.", lat: 52.52, lon: 13.40, url: "../musee_virtuel/test_mobile_first.html#14" },
+                    "United States of America": { id: 15, name: "The Gulf Stream", civil: "Winslow Homer", text: "Vision darwinienne de la nature.", lat: 25.00, lon: -80.00, url: "../musee_virtuel/test_mobile_first.html#15" }
+                }
+            }
+        };
+
+        let myGlobe, worldGeoJSON = null, currentPeriodKey = 'prehistory', currentActiveWork = null;
+
+        async function initGlobe() {
+            try {
+                const res = await fetch('https://raw.githubusercontent.com/vasturiano/globe.gl/master/example/datasets/ne_110m_admin_0_countries.geojson');
+                worldGeoJSON = await res.json();
+                
+                myGlobe = Globe()(document.getElementById('globeViz'))
+                    .globeImageUrl('https://unpkg.com/three-globe/example/img/earth-night.jpg')
+                    .backgroundColor('#020617')
+                    .showAtmosphere(true)
+                    .atmosphereColor('#cbd5e1')
+                    .atmosphereAltitude(0.15)
+                    .polygonsData(worldGeoJSON.features)
+                    .polygonCapColor(d => {
+                        const name = d.properties.NAME || d.properties.NAME_LONG || d.properties.ADMIN;
+                        return periodsData[currentPeriodKey].countryNames.includes(name) ? 'rgba(243, 244, 246, 0.45)' : 'rgba(255, 255, 255, 0.01)';
+                    })
+                    .polygonSideColor(() => 'rgba(255, 255, 255, 0.05)')
+                    .polygonStrokeColor(d => {
+                        const name = d.properties.NAME || d.properties.NAME_LONG || d.properties.ADMIN;
+                        return periodsData[currentPeriodKey].countryNames.includes(name) ? '#f9fafb' : 'rgba(255,255,255,0.05)';
+                    })
+                    .polygonAltitude(d => {
+                        const name = d.properties.NAME || d.properties.NAME_LONG || d.properties.ADMIN;
+                        return periodsData[currentPeriodKey].countryNames.includes(name) ? 0.03 : 0.01;
+                    })
+                    .onPolygonClick((polygon) => {
+                        const name = polygon.properties.NAME || polygon.properties.NAME_LONG || polygon.properties.ADMIN;
+                        const work = periodsData[currentPeriodKey].works[name];
+                        if (work) {
+                            myGlobe.pointOfView({ lat: work.lat, lng: work.lon, altitude: 1.8 }, 1200);
+                            showInfo(work);
+                        }
+                    })
+                    // --- AJOUT : Permettre de cliquer sur les vignettes (étiquettes) directement ---
+                    .onLabelClick((label) => {
+                        myGlobe.pointOfView({ lat: label.lat, lng: label.lon, altitude: 1.8 }, 1200);
+                        showInfo(label);
+                    })
+                    .labelsData([])
+                    .labelLat(d => d.lat)
+                    .labelLng(d => d.lon)
+                    .labelText(d => d.name)
+                    .labelSize(1.2)
+                    .labelColor(() => '#ffffff')
+                    .labelDotRadius(0.5);
+
+                document.getElementById('loading-screen').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 1000);
+                
+                selectPeriod('prehistory');
+                updateLoop();
+            } catch (error) { console.error(error); }
+        }
+
+        function selectPeriod(key) {
+            currentPeriodKey = key;
+            const data = periodsData[key];
+            
+            document.querySelectorAll('.timeline-item').forEach(item => item.classList.remove('active'));
+            document.getElementById(`item-${key}`).classList.add('active');
+            
+            document.getElementById('current-period-title').innerText = data.title;
+            document.getElementById('current-period-desc').innerText = data.desc;
+            
+            if (myGlobe) {
+                myGlobe.polygonsData(worldGeoJSON.features);
+                const labelArray = Object.values(data.works);
+                myGlobe.labelsData(labelArray);
+                
+                if (labelArray.length > 0) {
+                    myGlobe.pointOfView({ lat: labelArray[0].lat, lng: labelArray[0].lon, altitude: 2 }, 1500);
+                }
+            }
+            closeInfo();
+        }
+
+        function showInfo(work) {
+            currentActiveWork = work;
+            const bubble = document.getElementById('info-bubble');
+            document.getElementById('bubble-title').innerText = work.name;
+            document.getElementById('bubble-civilization').innerText = work.civil;
+            document.getElementById('bubble-text').innerText = work.text;
+            
+            // --- ACTION DU BOUTON : UTILISE L'URL SPÉCIFIQUE ---
+            document.getElementById('btn-discover').onclick = () => {
+                window.location.href = work.url;
+            };
+            
+            bubble.style.display = 'block';
+        }
+
+        function closeInfo() { 
+            currentActiveWork = null; 
+            document.getElementById('info-bubble').style.display = 'none'; 
+        }
+
+        function updateBubblePosition() {
+            if (!currentActiveWork || !myGlobe) return;
+            const bubble = document.getElementById('info-bubble');
+            const screenCoords = myGlobe.getScreenCoords(currentActiveWork.lat, currentActiveWork.lon);
+            bubble.style.left = `${screenCoords.x}px`;
+            bubble.style.top = `${screenCoords.y}px`;
+        }
+
+        function updateLoop() { 
+            updateBubblePosition(); 
+            requestAnimationFrame(updateLoop); 
+        }
+
+        window.addEventListener('click', (e) => { 
+            if (e.target.tagName === 'CANVAS') closeInfo(); 
+        });
+
+        window.onload = initGlobe;
+        window.onresize = () => myGlobe && myGlobe.width(window.innerWidth).height(window.innerHeight);
+    </script>
+</body>
+</html>
