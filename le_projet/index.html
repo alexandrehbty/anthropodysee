@@ -127,7 +127,7 @@
 
     <!-- Header -->
     <header class="fixed top-0 left-0 w-full p-6 z-50 flex justify-between items-center glass-header">
-        <div class="flex items-center space-x-4 group cursor-pointer" onclick="window.location.href='home.html'">
+        <div class="flex items-center space-x-4 group cursor-pointer" onclick="window.location.href='../index.htm'">
             <div class="group-hover:text-blue-600 group-hover:scale-105 transition-all duration-300">
                 <svg viewBox="0 0 24 24" class="logo-svg text-slate-900">
                     <circle cx="12" cy="12" r="10" stroke-dasharray="2 2" class="opacity-20"></circle>
@@ -139,9 +139,9 @@
             <h1 class="text-xl font-bold tracking-tight uppercase text-slate-900 transition-colors duration-300 group-hover:text-blue-600">Odyssée Anthropologique</h1>
         </div>
         <nav class="hidden lg:flex space-x-10 text-[11px] font-bold uppercase tracking-[0.2em]">
-            <a href="home.html" class="text-slate-500 hover:text-slate-900 transition">Accueil</a>
-            <a href="projet.html" class="text-blue-600">Le Projet</a>
-            <a href="musee.html" class="text-slate-500 hover:text-slate-900 transition">Musée Virtuel</a>
+            <a href="../index.htm" class="text-slate-500 hover:text-slate-900 transition">Accueil</a>
+            <a href="../le_projet/index.html" class="text-blue-600">Le Projet</a>
+            <a href="../musée_virtuel/index.html" class="text-slate-500 hover:text-slate-900 transition">Musée Virtuel</a>
         </nav>
         <a href="index.html" class="bg-slate-900 text-white px-8 py-2 rounded-full text-[11px] font-bold hover:bg-blue-600 transition uppercase tracking-widest shadow-xl">
             Explorer la Map
@@ -174,9 +174,21 @@
             </div>
         </div>
         <div class="lg:col-span-5 flex items-center">
+            <!-- Zone grisée avec support d'image -->
             <div class="aspect-square w-full rounded-3xl shadow-sm flex items-center justify-center bg-slate-200 relative group overflow-hidden border border-slate-200">
-                 <div class="absolute inset-0 bg-slate-900/5 group-hover:bg-transparent transition-colors"></div>
-                 <p class="text-slate-400 italic text-sm p-12 text-center"></p>
+                 <!-- Image de la section 1 -->
+                 <img src="musee_virtuel/img/img_le_projet.jpg" 
+                      alt="Illustration Anthropologique" 
+                      class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      onerror="this.style.display='none'">
+                 
+                 <!-- Overlay au survol -->
+                 <div class="absolute inset-0 bg-slate-900/5 group-hover:bg-transparent transition-colors pointer-events-none"></div>
+                 
+                 <!-- Texte de secours si l'image ne charge pas -->
+                 <p class="absolute text-slate-400 italic text-sm p-12 text-center pointer-events-none">
+                    <!-- INSÉREZ L'URL DE VOTRE IMAGE DANS LA BALISE <img> CI-DESSUS -->
+                 </p>
             </div>
         </div>
     </section>
@@ -418,4 +430,5 @@
         }
     </script>
 </body>
+
 </html>
