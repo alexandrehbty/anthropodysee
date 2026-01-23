@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Musée Virtuel 2 | Odyssée Anthropologique</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --slate-950: #020617;
+            --slate-900: #0f172a;
+            --slate-100: #f8fafc;
+            --blue-accent: #3b82f6;
+            --fluid-bezier: cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: white;
+            color: var(--slate-900);
+            scroll-behavior: smooth;
+        }
+        h1, h2, h3, .serif { font-family: 'Playfair Display', serif; }
+        
+        /* Cadre dynamique s'adaptant à la taille de l'image */
+        .artwork-viewer {
+            background-color: var(--slate-100);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            transition: all 0.5s ease;
+            position: relative;
+            margin-bottom: 2rem;
+            padding: 1.25rem; 
+            width: fit-content; 
+            min-width: 280px; 
+            max-width: 100%;   
+            margin-left: auto; 
+            margin-right: auto;
+            min-height: 250px; 
+            isolate: preserve;
+        }
+        @media (min-width: 768px) {
+            .artwork-viewer {
+                border-radius: 2.5rem;
+                margin-bottom: 5rem;
+                padding: 2.5rem;
+                min-height: 400px;
+                min-width: 400px;
+            }
+        }
+
+        /* L'œuvre (image réelle) sans effet de survol */
+        .art-frame {
+            max-width: 100%;
+            max-height: 65vh;
+            border: 4px solid white;
+            border-radius: 0.75rem;
+            transition: opacity 0.5s ease;
+            display: block;
+            object-fit: contain;
+            background-color: white;
+            opacity: 0; 
+        }
+        .art-frame.loaded { opacity: 1; }
+        
+        @media (min-width: 768px) {
+            .art-frame {
+                border: 8px solid white;
+                border-radius: 1.25rem;
+                max-height: 70vh;
+            }
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .logo-svg {
+            width: 32px;
+            height: 32px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+        @media (min-width: 768px) { .logo-svg { width: 40px; height: 40px; } }
+
+        .drop-cap::first-letter {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            float: left;
+            margin-right: 0.5rem;
+            line-height: 1;
+            color: var(--slate-950);
+            font-weight: 700;
+        }
+        @media (min-width: 768px) { .drop-cap::first-letter { font-size: 4.5rem; margin-right: 0.75rem; } }
+
+        .fade-content { animation: fadeIn 0.8s ease-out forwards; opacity: 0; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Navigation Mobile First */
+        .nav-btn {
+            transition: all 0.3s var(--fluid-bezier);
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        @media (min-width: 768px) { 
+            .nav-btn { width: 320px; padding: 2rem; flex: none; } 
+        }
+
+        .meta-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            color: #94a3b8;
+            margin-bottom: 2px;
+            display: block;
+        }
+        .meta-value {
+            font-size: 13px;
+            color: var(--slate-900);
+            line-height: 1.4;
+        }
+        @media (min-width: 768px) { .meta-value { font-size: 14px; } }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header -->
+    <header class="fixed top-0 left-0 w-full p-4 md:p-6 z-50 flex justify-between items-center glass-header">
+        <div class="flex items-center space-x-2 md:space-x-4 group cursor-pointer" onclick="window.location.href='home.html'">
+            <div class="group-hover:text-blue-600 transition-all duration-300">
+                <svg viewBox="0 0 24 24" class="logo-svg text-slate-900">
+                    <circle cx="12" cy="12" r="10" stroke-dasharray="2 2" class="opacity-20"></circle>
+                    <path d="M2 12c4 0 4-4 8-4s4 4 8 4 4-4 8-4"></path>
+                    <path d="M2 16c4 0 4-4 8-4s4 4 8 4 4-4 8-4" class="opacity-40"></path>
+                    <path d="M12 2v4M12 18v4M2 12h2M18 12h4" class="opacity-20"></path>
+                </svg>
+            </div>
+            <h1 class="text-xs md:text-xl font-bold tracking-tight uppercase text-slate-900 truncate max-w-[120px] md:max-w-none">Odyssée Anthropologique</h1>
+        </div>
+        <nav class="hidden lg:flex space-x-10 text-[11px] font-bold uppercase tracking-[0.2em]">
+            <a href="home.html" class="text-slate-500 hover:text-slate-900 transition">Accueil</a>
+            <a href="projet.html" class="text-slate-500 hover:text-slate-900 transition">Le Projet</a>
+            <a href="#" class="text-blue-600 border-b border-blue-600 pb-1">Musée Virtuel</a>
+        </nav>
+        <button onclick="window.location.href='index.html'" class="bg-slate-900 text-white px-4 md:px-8 py-2 rounded-full text-[9px] md:text-[11px] font-bold hover:bg-blue-600 transition uppercase tracking-widest shadow-md">
+            Retour à la MAP
+        </button>
+    </header>
+
+    <main id="museum-app" class="pt-24 md:pt-40 pb-10 md:pb-20 transition-opacity duration-500">
+        
+        <!-- Viewer Adaptatif -->
+        <section class="max-w-7xl mx-auto px-4 md:px-6 flex justify-center">
+            <div class="artwork-viewer" id="art-visual-container">
+                <!-- Rempli par JS -->
+            </div>
+        </section>
+
+        <!-- Content Grid -->
+        <section class="max-w-6xl mx-auto px-4 md:px-6 grid grid-cols-1 lg:grid-cols-12 gap-10 md:gap-20">
+            
+            <!-- Mobile Header -->
+            <div class="lg:hidden text-center">
+                <span id="art-period-mobile" class="text-blue-600 font-bold uppercase tracking-[0.4em] text-[10px] mb-3 block">Époque</span>
+                <h2 id="art-title-heading-mobile" class="text-3xl md:text-4xl font-serif italic text-slate-950 leading-tight">Titre</h2>
+                <div class="w-12 h-0.5 bg-blue-600 mx-auto mt-6"></div>
+            </div>
+
+            <!-- Fiche Technique -->
+            <div class="lg:col-span-4 lg:border-l border-slate-100 lg:pl-10 space-y-8 md:space-y-12 order-2 lg:order-1">
+                <div id="art-id-badge" class="inline-block bg-slate-900 text-white text-[9px] font-bold px-4 py-1 rounded-full uppercase tracking-widest mb-4">
+                    ID #01
+                </div>
+                <div>
+                    <span class="text-blue-600 font-bold uppercase tracking-[0.3em] text-[10px] mb-8 block">Fiche Technique</span>
+                    <div id="art-meta" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 md:gap-8">
+                        <!-- JS -->
+                    </div>
+                </div>
+                
+                <div class="pt-8 border-t border-slate-100">
+                    <a id="art-museum-btn" href="#" target="_blank" class="flex items-center space-x-3 text-[10px] font-bold uppercase tracking-widest text-white bg-slate-900 hover:bg-blue-600 px-6 py-4 rounded-full transition w-full justify-center shadow-lg group">
+                        <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        <span>Consulter au Musée</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Analysis Section -->
+            <div class="lg:col-span-8 order-1 lg:order-2">
+                <div class="hidden lg:block">
+                    <span id="art-period" class="text-blue-600 font-bold uppercase tracking-[0.4em] text-[11px] mb-6 block">Époque</span>
+                    <h2 id="art-title-heading" class="text-6xl xl:text-7xl mb-12 leading-tight font-serif italic text-slate-950">Titre</h2>
+                </div>
+                
+                <div id="art-text" class="space-y-6 md:space-y-10 text-lg md:text-xl text-slate-700 leading-relaxed font-light drop-cap mb-12 md:mb-20">
+                    <!-- JS -->
+                </div>
+
+                <div class="biblio-box p-6 md:p-10 bg-slate-50 rounded-3xl border border-slate-100 shadow-sm">
+                    <span class="text-slate-400 font-bold uppercase tracking-[0.3em] text-[9px] mb-6 block">Sources & Bibliographie</span>
+                    <div id="art-biblio" class="text-xs md:text-sm text-slate-500 leading-relaxed italic space-y-3">
+                        <!-- JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation System (Stacked on Mobile) -->
+        <section class="max-w-7xl mx-auto px-0 md:px-6 mt-16 md:mt-40 border-t border-slate-100 pt-0 md:pt-16">
+            <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between">
+                <button onclick="navArtwork(-1)" class="nav-btn group text-left border-b md:border-none border-slate-100 bg-slate-50/30 md:bg-transparent">
+                    <span class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-2">Précédent</span>
+                    <span id="nav-prev-title" class="serif italic text-sm md:text-xl group-hover:text-blue-600 transition">...</span>
+                </button>
+                
+                <div class="hidden md:flex flex-col items-center mx-10">
+                    <div class="text-[12px] font-bold tracking-[0.5em] text-slate-300 uppercase mb-4">Parcours</div>
+                    <div class="flex space-x-1.5" id="dot-nav"></div>
+                </div>
+
+                <button onclick="navArtwork(1)" class="nav-btn group text-right bg-slate-50/10 md:bg-transparent">
+                    <span class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 block mb-2">Suivant</span>
+                    <span id="nav-next-title" class="serif italic text-sm md:text-xl group-hover:text-blue-600 transition text-right">...</span>
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-950 text-white py-12 md:py-24 px-6">
+        <div class="max-w-6xl mx-auto text-center">
+            <p class="text-slate-500 text-[10px] uppercase tracking-[0.5em] leading-relaxed">
+                Odyssée Anthropologique © 2026 — Médiation Scientifique & Culturelle
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        const artworks = [
+            {
+                id: 1,
+                period: "Préhistoire",
+                title: "Représentation de Grands Pingouins",
+                img: "img/img_prehist_cosquer.jpg",
+                artist: "Inconnu",
+                civil: "Paléolithique supérieur (Gravettien)",
+                date: "env. 27 000 ans BP",
+                loc: "Grotte Cosquer, Marseille (France)",
+                tech: "Dessin au charbon de bois et gravure sur paroi calcaire",
+                dims: "Grandeur nature ou légèrement réduite",
+                url: "https://www.grotte-cosquer.com/",
+                text: "Cette œuvre est exceptionnelle car elle représente une faune marine rarement figurée dans l'art pariétal européen. Située dans une grotte qui n'était pas sous l'eau à l'époque glaciaire, elle témoigne de la relation vitale des chasseurs-cueilleurs avec le littoral. La mer n'est pas un paysage que l'on contemple, mais un réservoir de ressources (le Grand Pingouin, aujourd'hui éteint, était chassé pour sa chair et sa graisse). L'acte de peindre relève ici d'une pensée magico-religieuse: capturer l'image de l'animal marin pour s'approprier sa force ou garantir la chasse.",
+                biblio: "Clottes, Jean et Courtin, Jean. La Grotte Cosquer: Peintures et gravures de la caverne engloutie. Seuil, 1994."
+            },
+            {
+                id: 2,
+                period: "Préhistoire",
+                title: "Pétroglyphes de Bangudae",
+                img: "img/art2.jpg",
+                artist: "Inconnu",
+                civil: "Néolithique / Âge du Bronze Coréen",
+                date: "Entre 6000 et 1000 av. J.-C.",
+                loc: "Site d'Ulsan (Corée du Sud)",
+                tech: "Gravure rupestre par piquetage et polissage sur roche sédimentaire",
+                dims: "env. 10 mètres de long sur 3 mètres de haut",
+                url: "http://bangudae.ulsan.go.kr/",
+                text: "Ce site est exceptionnel car il constitue une véritable encyclopédie zoologique de la préhistoire marine. On y distingue plus de 200 figures, dont une grande variété de cétacés identifiables (baleines franches, cachalots, baleines grises). L'œuvre détaille avec précision les techniques de chasse maritime: bateaux transportant plusieurs rameurs, utilisation de flotteurs et de harpons reliés par des cordes. La mer est ici un territoire de chasse organisé où l'homme, grâce à sa technologie et à sa coopération, s'affirme comme un prédateur capable de rivaliser avec les géants des mers.",
+                biblio: "Nelson, Sarah M. The Archaeology of Korea. Cambridge University Press, 1993."
+            },
+            {
+                id: 3,
+                period: "Préhistoire",
+                title: "Scène de pêche au flétan",
+                img: "img/art3.jpg",
+                artist: "Inconnu",
+                civil: "Culture des chasseurs-cueilleurs de l'Arctique",
+                date: "Environ 4200-500 av. J.-C.",
+                loc: "Musée d'Alta, Laponie (Norvège)",
+                tech: "Pétroglyphes (roche gravée/ciselée)",
+                dims: "Figures de taille variable (poisson surdimensionné)",
+                url: "https://www.altamuseum.no/",
+                text: "Cette gravure célèbre illustre la lutte quotidienne pour la survie dans un environnement hostile. On y voit un petit personnage sur une embarcation, tenant une ligne de pêche au bout de laquelle est accroché un immense flétan. La disproportion entre l'homme minuscule et le poisson gigantesque souligne la puissance de la nature marine. Ici, la mer n'est pas idéalisée; c'est un lieu de travail physique et dangereux, source essentielle de nourriture pour les peuples du Grand Nord.",
+                biblio: "Helskog, Knut. Samisk fortid i Alta: The Rock Carvings of Alta. Alta Museum, 2012."
+            },
+            {
+                id: 4,
+                period: "Antiquité",
+                title: "Ulysse résistant aux Sirènes",
+                img: "img/art4.jpg",
+                artist: "Le Peintre des Sirènes (attribué)",
+                civil: "Grèce Antique",
+                date: "v. 480-470 av. J.-C.",
+                loc: "British Museum, Londres (Royaume-Uni)",
+                tech: "Céramique (terre cuite) à figures rouges",
+                dims: "Hauteur : 35,3 cm",
+                url: "https://www.britishmuseum.org/",
+                text: "Cette œuvre emblématique résume la méfiance grecque envers la mer (Thalassa). La mer est perçue comme un espace de danger imprévisible et de séduction mortelle, incarné par les Sirènes (monstres hybrides mi-femmes mi-oiseaux). Ulysse, attaché au mât pour écouter leur chant sans y succomber, symbolise la victoire de la culture et de la raison humaine (Logos) sur la sauvagerie indomptable des flots.",
+                biblio: "Boardman, John. Athenian Red Figure Vases: The Archaic Period. Thames and Hudson, 1975."
+            },
+            {
+                id: 5,
+                period: "Antiquité",
+                title: "Récipient à bec à étrier Moche",
+                img: "img/art5.jpg",
+                artist: "Artiste Moche",
+                civil: "Culture Moche (Pérou)",
+                date: "v. 200 - 600 apr. J.-C.",
+                loc: "Musée d'Art de Princeton (USA)",
+                tech: "Céramique à décor d'engobe crème et rouge",
+                dims: "Hauteur moyenne : 29.2 cm",
+                url: "https://artmuseum.princeton.edu/",
+                text: "Cette bouteille à anse en étrier est un chef-d’œuvre du style de la « ligne fine » (Phase IV), où la surface céramique devient le support d'une narration complexe explorant les dimensions rituelles de l'océan. Contrairement aux représentations purement utilitaires, l’iconographie déploie ici des personnages de la haute élite ou des divinités naviguant sur de grandes embarcations de roseaux tressés. L’espace maritime n’est pas perçu comme une frontière hostile, mais comme un écosystème d'abondance régi par des forces surnaturelles. Pour les Moche, la mer constituait un espace liminaire sacré où la navigation symbolisait autant la maîtrise technique que le voyage spirituel.",
+                biblio: "McClelland, Donna et al. Moche Fineline Painting. UCLA, 2007"
+            },
+            {
+                id: 6,
+                period: "Antiquité",
+                title: "Miroir Han aux motifs de vagues",
+                img: "img/art6.jpg",
+                artist: "Inconnu",
+                civil: "Chine (Dynastie Han)",
+                date: "206 av. J.-C. - 220 apr. J.-C.",
+                loc: "Metropolitan Museum of Art, New York",
+                tech: "Bronze avec patine noir",
+                dims: "Diamètre moyen : 16.8 cm",
+                url: "https://www.metmuseum.org/",
+                text: "Dans la cosmologie Han, la Grande Mer Orientale n'est pas une simple étendue d'eau, mais une barrière mystique séparant le monde des hommes des îles des Immortels (Penglai). Les motifs de vagues stylisées évoquent cet espace inaccessible. La mer est ici un concept métaphysique lié à la quête d'éternité, bien loin de la vision commerciale ou guerrière d'autres civilisations.",
+                biblio: "Loewe, Michael. Ways to Paradise. SMU Press, 1979."
+            },
+            {
+                id: 7,
+                period: "Moyen-Âge",
+                title: "La Tabula Rogeriana",
+                img: "img/art7.jpg",
+                artist: "Al-Idrisi",
+                civil: "Monde Arabe / Normano-Sicilien",
+                date: "1154",
+                loc: "Bibliothèque nationale de France (Paris)",
+                tech: "Encre et pigments sur parchemin",
+                dims: "Variable (original disque argent de 2m)",
+                url: "https://gallica.bnf.fr/",
+                text: "Cette carte est un chef-d'œuvre de synthèse scientifique. Commandée par le roi Roger II de Sicile à Al-Idrisi, géographe arabe andalou, elle représente le monde connu avec le sud en haut. La mer n'est plus un décor ou un mystère, mais un espace géographique connecté, méticuleusement tracé grâce aux récits de marins et de voyageurs. Elle montre la Méditerranée non comme une barrière, mais comme le système circulatoire du commerce mondial.",
+                biblio: "Ducène, Jean-Charles. Le livre de Roger d'al-Idrisi. Brepols, 2023."
+            },
+            {
+                id: 8,
+                period: "Moyen-Âge",
+                title: "La Traversée de la Manche",
+                img: "img/art8.jpg",
+                artist: "Ateliers Normands",
+                civil: "Europe Médiévale (Normandie)",
+                date: "XIe siècle (v. 1070)",
+                loc: "Musée de la Tapisserie de Bayeux (France)",
+                tech: "Broderie de fils de laine sur toile de lin",
+                dims: "Près de 70 mètres de long",
+                url: "https://www.bayeuxmuseum.com/",
+                text: "Pour les Normands, descendants des Vikings, la mer est un outil de projection de puissance militaire. L'œuvre insiste sur la logistique technique: l'abattage des arbres, la construction des coques à clins, le transport des chevaux et des hommes en armes. La mer n'est pas esthétisée; elle est un espace fonctionnel, un obstacle physique que l'ingénierie navale permet de franchir.",
+                biblio: "Wilson, David M. The Bayeux Tapestry. Thames & Hudson, 1985."
+            },
+            {
+                id: 9,
+                period: "Moyen-Âge",
+                title: "Album de l'Eau (Vagues Furieuses)",
+                img: "img/art9.jpg",
+                artist: "Ma Yuan (马远)",
+                civil: "Chine (Dynastie Song du Sud)",
+                date: "XIIe - XIIIe siècle",
+                loc: "Musée du Palais (Pékin, Chine)",
+                tech: "Encre et couleur légère sur soie",
+                dims: "Feuilles d'album (env. 27 x 40 cm)",
+                url: "https://intl.dpm.org.cn/",
+                text: "Cette œuvre marque une rupture anthropologique majeure. L'artiste élimine toute présence humaine. Le sujet unique est l'eau elle-même, saisie dans son mouvement et sa texture. Influencée par le taoïsme et le chan (zen), l'œuvre invite à méditer sur les principes de fluidité, de puissance et de changement perpétuel. La mer est perçue comme une manifestation du souffle vital (Qi) de l'univers.",
+                biblio: "Sirén, Osvald. Chinese Painting. Hacker Art Books, 1973."
+            },
+            {
+                id: 10,
+                period: "Renaissance",
+                title: "Carte de Piri Reis",
+                img: "img/art10.jpg",
+                artist: "Piri Reis (Amiral Ottoman)",
+                civil: "Empire Ottoman",
+                date: "1513",
+                loc: "Musée du Palais de Topkapi, Istanbul",
+                tech: "Encre et peinture sur peau de gazelle",
+                dims: "Fragment d'environ 90 x 63 cm",
+                url: "https://www.unesco.org/",
+                text: "Cette carte symbolise la perception moderne de la mer : un espace géométrique quantifiable. Piri Reis synthétise les savoirs portugais, arabes et une carte perdue de Christophe Colomb pour cartographier le Nouveau Monde avec une précision stupéfiante. La mer n'est plus un mystère, c'est une surface politique à diviser et à contrôler par la science.",
+                biblio: "McIntosh, Gregory C. The Piri Reis Map. Georgia, 2000."
+            },
+            {
+                id: 11,
+                period: "Renaissance",
+                title: "Paysage avec la chute d'Icare",
+                img: "img/art11.jpg",
+                artist: "Pieter Brueghel l'Ancien",
+                civil: "Europe (Renaissance Flamande)",
+                date: "v. 1558",
+                loc: "Beaux-Arts de Belgique, Bruxelles",
+                tech: "Huile sur toile",
+                dims: "73,5 x 112 cm",
+                url: "https://fine-arts-museum.be/",
+                text: "Brueghel présente une vision humaniste mais cynique. La mer est vaste, lumineuse et ouverte au commerce, mais elle est totalement indifférente au drame individuel (la noyade d'Icare). La mer devient un décor réaliste où la vie quotidienne et économique prime sur les mythes héroïques antiques. L'homme est petit face à l'immensité.",
+                biblio: "Roberts, Keith. Bruegel. Phaidon, 1971."
+            },
+            {
+                id: 12,
+                period: "Renaissance",
+                title: "Pins et Vagues",
+                img: "img/art12.jpg",
+                artist: "Itaya Hiroharu",
+                civil: "Japon (Époque Momoyama / Edo)",
+                date: "XVIIe siècle",
+                loc: "Royal Collection Trust, Londres",
+                tech: "Encre, couleurs et feuilles d'or sur papier",
+                dims: "175.3 x 254 cm (six panneaux)",
+                url: "https://www.rct.uk/",
+                text: "Au Japon, sous les Shoguns, la mer devient un élément de décor intérieur symbolisant la puissance et l'éternité. Les vagues musculeuses et stylisées ne sont pas réalistes mais théâtrales. Elles représentent la permanence et la force, des vertus prisées par la caste guerrière (les samouraïs). La mer sauvage est \"domestiquée\" par l'art.",
+                biblio: "Wheelwright, Carolyn. Word in Flower. Yale, 1989."
+            },
+            {
+                id: 13,
+                period: "Époque Contemporaine",
+                title: "La Grande Vague au large de Kanagawa",
+                img: "img/art13.jpg",
+                artist: "Katsushika Hokusai",
+                civil: "Japon (Époque Edo)",
+                date: "Vers 1830-1831",
+                loc: "Metropolitan Museum, NY",
+                tech: "Xylographie polychrome",
+                dims: "25.7 x 37.9 cm",
+                url: "https://www.metmuseum.org/",
+                text: "Icône mondiale, cette œuvre cristallise la fascination mêlée de terreur pour la nature. La vague menace d'engloutir les pêcheurs, rappelant l'extrême vulnérabilité de l'humanité face aux éléments. Cependant, l'utilisation du Bleu de Prusse importé d'Occident montre que la mer est aussi un vecteur d'échange culturel.",
+                biblio: "Calza, Gian Carlo. Hokusai. Phaidon Press, 2003."
+            },
+            {
+                id: 14,
+                period: "Époque Contemporaine",
+                title: "Le Moine au bord de la mer",
+                img: "img/art14.jpg",
+                artist: "Caspar David Friedrich",
+                civil: "Europe (Romantisme Allemand)",
+                date: "1808-1810",
+                loc: "Alte Nationalgalerie, Berlin",
+                tech: "Huile sur toile",
+                dims: "110 x 171,5 cm",
+                url: "https://recherche.smb.museum/",
+                text: "C'est le chef-d'œuvre du romantisme occidental. La mer est un espace de pure contemplation intérieure. La composition radicale confronte l'homme à sa solitude existentielle. C'est l'expression du sentiment du Sublime: une émotion mêlée de crainte, de respect et d'élévation spirituelle face à l'infini divin de la nature.",
+                biblio: "Grave, Johannes. Caspar David Friedrich. Prestel, 2012."
+            },
+            {
+                id: 15,
+                period: "Époque Contemporaine",
+                title: "The Gulf Stream",
+                img: "img/img_contp_homer.jpg",
+                artist: "Winslow Homer",
+                civil: "Amériques (Réalisme Américain)",
+                date: "1899",
+                loc: "Metropolitan Museum of Art, New York",
+                tech: "Huile sur toile",
+                dims: "107.5 x 159.3 cm",
+                url: "https://www.metmuseum.org/",
+                text: "À l'aube du XXe siècle, Homer livre une vision naturaliste et brutale. La mer est un environnement hostile et dynamique, indifférent au sort de l'homme démâté. C'est une vision darwinienne de la nature: une force aléatoire et sans pitié. L'œuvre porte aussi une dimension symbolique sur la condition humaine et les tensions raciales post-guerre civile.",
+                biblio: "Cikovsky, Nicolai Jr. Winslow Homer. Yale University Press, 1995."
+            }
+        ];
+
+        let currentIdx = 0;
+
+        function renderArtwork(id) {
+            const art = artworks.find(a => a.id == id) || artworks[0];
+            currentIdx = artworks.indexOf(art);
+            const app = document.getElementById('museum-app');
+            const visualContainer = document.getElementById('art-visual-container');
+            
+            app.classList.remove('opacity-100');
+            app.classList.add('opacity-0');
+
+            setTimeout(() => {
+                document.getElementById('art-id-badge').innerText = `Œuvre #${art.id.toString().padStart(2, '0')}`;
+                
+                document.getElementById('art-title-heading').innerText = art.title;
+                document.getElementById('art-title-heading-mobile').innerText = art.title;
+                document.getElementById('art-period').innerText = art.period;
+                document.getElementById('art-period-mobile').innerText = art.period;
+
+                visualContainer.innerHTML = ''; 
+                visualContainer.style.width = "auto"; 
+
+                const imgElement = new Image();
+                imgElement.src = art.img;
+                imgElement.alt = art.title;
+                imgElement.className = 'art-frame';
+                
+                imgElement.onload = () => {
+                    imgElement.classList.add('loaded');
+                    visualContainer.appendChild(imgElement);
+                };
+
+                imgElement.onerror = () => {
+                    visualContainer.style.width = "100%"; 
+                    visualContainer.style.maxWidth = "600px";
+                    visualContainer.innerHTML = `
+                        <div class="flex flex-col items-center justify-center text-center p-6 fade-content">
+                            <div class="text-5xl md:text-7xl mb-6">🖼️</div>
+                            <div class="text-slate-400 font-serif italic text-xl md:text-2xl">${art.title}</div>
+                            <div class="text-[9px] mt-4 opacity-50 uppercase tracking-[0.2em] font-bold">
+                                Image locale [${art.img}] non trouvée
+                            </div>
+                        </div>
+                    `;
+                };
+
+                document.getElementById('art-meta').innerHTML = `
+                    <div class="fade-content" style="animation-delay: 0s"><span class="meta-label">Titre</span><p class="meta-value font-serif italic font-bold text-base md:text-lg">${art.title}</p></div>
+                    <div class="fade-content" style="animation-delay: 0.1s"><span class="meta-label">Artiste</span><p class="meta-value font-semibold text-blue-600">${art.artist}</p></div>
+                    <div class="fade-content" style="animation-delay: 0.2s"><span class="meta-label">Civilisation</span><p class="meta-value font-semibold">${art.civil}</p></div>
+                    <div class="fade-content" style="animation-delay: 0.3s"><span class="meta-label">Datation</span><p class="meta-value">${art.date}</p></div>
+                    <div class="fade-content" style="animation-delay: 0.4s"><span class="meta-label">Conservation</span><p class="meta-value italic">${art.loc}</p></div>
+                    <div class="fade-content" style="animation-delay: 0.5s"><span class="meta-label">Technique</span><p class="meta-value">${art.tech}</p></div>
+                    <div class="fade-content" style="animation-delay: 0.6s"><span class="meta-label">Dimensions</span><p class="meta-value">${art.dims}</p></div>
+                `;
+
+                document.getElementById('art-text').innerHTML = `<p>${art.text}</p>`;
+                document.getElementById('art-biblio').innerHTML = `<p>${art.biblio}</p>`;
+                document.getElementById('art-museum-btn').href = art.url;
+
+                const prev = artworks[(currentIdx - 1 + 15) % 15];
+                const next = artworks[(currentIdx + 1) % 15];
+                document.getElementById('nav-prev-title').innerText = prev.title;
+                document.getElementById('nav-next-title').innerText = next.title;
+
+                updateDots(currentIdx);
+                
+                app.classList.remove('opacity-0');
+                app.classList.add('opacity-100');
+                window.scrollTo({ top: 0, behavior: "smooth" });
+            }, 500);
+        }
+
+        function updateDots(activeIdx) {
+            const container = document.getElementById('dot-nav');
+            container.innerHTML = '';
+            artworks.forEach((_, i) => {
+                const dot = document.createElement('div');
+                dot.className = `w-1.5 h-1.5 rounded-full transition-all duration-500 ${i === activeIdx ? 'w-8 bg-blue-600' : 'bg-slate-200'}`;
+                container.appendChild(dot);
+            });
+        }
+
+        function navArtwork(direction) {
+            currentIdx = (currentIdx + direction + 15) % 15;
+            renderArtwork(artworks[currentIdx].id);
+            try { window.location.hash = artworks[currentIdx].id; } catch (e) {}
+        }
+
+        window.onhashchange = () => {
+            const hashId = parseInt(window.location.hash.replace('#', ''));
+            if (!isNaN(hashId) && artworks[currentIdx].id !== hashId) renderArtwork(hashId);
+        };
+
+        window.onload = () => {
+            const hashId = parseInt(window.location.hash.replace('#', ''));
+            renderArtwork(!isNaN(hashId) ? hashId : 1);
+        };
+    </script>
+</body>
+</html>
