@@ -49,85 +49,55 @@
             transition: all 0.4s var(--fluid-bezier);
         }
 
-        /* --- Style du Lecteur Audio --- */
-        .audio-container {
+        /* --- Style des Cartes de Téléchargement --- */
+        .download-card {
             background: white;
             border: 1px solid #e2e8f0;
-            border-radius: 2.5rem;
-            padding: 2.5rem;
-            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08);
+            border-radius: 2rem;
+            padding: 3rem;
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
             position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .download-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px -10px rgba(59, 130, 246, 0.1);
+            border-color: var(--blue-accent);
         }
 
-        input[type="range"] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-            cursor: pointer;
-        }
-        input[type="range"]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            background: #f1f5f9;
-            border-radius: 2px;
-        }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 14px;
-            width: 14px;
-            border-radius: 50%;
-            background: var(--blue-accent);
-            margin-top: -5px;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        .download-icon-bg {
+            position: absolute;
+            top: -20px;
+            right: -20px;
+            width: 150px;
+            height: 150px;
+            color: #f1f5f9;
+            transform: rotate(15deg);
+            z-index: 0;
         }
 
-        .audio-visualizer {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            height: 40px;
-            margin-bottom: 1.5rem;
+        .btn-download {
+            transition: all 0.2s ease;
+        }
+        .btn-download:hover {
+            transform: scale(1.02);
         }
 
-        .bar {
-            width: 3px;
-            height: 8px;
-            background: var(--blue-accent);
-            border-radius: 10px;
-            opacity: 0.2;
-            transition: all 0.3s ease;
+        .accent-line {
+            width: 60px;
+            height: 2px;
+            background: #3b82f6;
+            margin: 2rem 0;
         }
-
-        .playing .bar {
-            opacity: 0.8;
-            animation: wave 1.2s infinite ease-in-out;
-        }
-
-        @keyframes wave {
-            0%, 100% { height: 8px; }
-            50% { height: 32px; }
-        }
-
-        /* Modale Transcription */
-        #transcription-modal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            background: rgba(2, 6, 23, 0.85);
-            backdrop-filter: blur(10px);
-        }
-        #transcription-modal.active { display: flex; }
     </style>
 </head>
 <body class="antialiased">
 
     <!-- Header -->
     <header class="fixed top-0 left-0 w-full p-6 z-50 flex justify-between items-center glass-header">
-        <div class="flex items-center space-x-4 group cursor-pointer" onclick="window.location.href='../index.htm'">
+        <div class="flex items-center space-x-4 group cursor-pointer" onclick="window.location.href='home.html'">
             <div class="group-hover:text-blue-600 group-hover:scale-105 transition-all duration-300">
                 <svg viewBox="0 0 24 24" class="logo-svg text-slate-900">
                     <circle cx="12" cy="12" r="10" stroke-dasharray="2 2" class="opacity-20"></circle>
@@ -143,7 +113,7 @@
             <a href="../le_projet/index.html" class="text-blue-600">Le Projet</a>
             <a href="../musée_virtuel/index.html" class="text-slate-500 hover:text-slate-900 transition">Musée Virtuel</a>
         </nav>
-        <a href="index.html" class="bg-slate-900 text-white px-8 py-2 rounded-full text-[11px] font-bold hover:bg-blue-600 transition uppercase tracking-widest shadow-xl">
+        <a href="../la_map/index.html" class="bg-slate-900 text-white px-8 py-2 rounded-full text-[11px] font-bold hover:bg-blue-600 transition uppercase tracking-widest shadow-xl">
             Explorer la Map
         </a>
     </header>
@@ -174,26 +144,24 @@
             </div>
         </div>
         <div class="lg:col-span-5 flex items-center">
-            <!-- Zone grisée avec support d'image -->
             <div class="aspect-square w-full rounded-3xl shadow-sm flex items-center justify-center bg-slate-200 relative group overflow-hidden border border-slate-200">
-                 <!-- Image de la section 1 -->
+                 <!-- Image locale -->
                  <img src="../musée_virtuel/img/img_le_projet.jpg" 
-                      alt="Illustration Anthropologique" 
+                      alt="Illustration du Projet" 
                       class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                       onerror="this.style.display='none'">
                  
-                 <!-- Overlay au survol -->
                  <div class="absolute inset-0 bg-slate-900/5 group-hover:bg-transparent transition-colors pointer-events-none"></div>
                  
-                 <!-- Texte de secours si l'image ne charge pas -->
-                 <p class="absolute text-slate-400 italic text-sm p-12 text-center pointer-events-none">
-                    <!-- INSÉREZ L'URL DE VOTRE IMAGE DANS LA BALISE <img> CI-DESSUS -->
+                 <p class="absolute text-slate-400 italic text-xs p-12 text-center pointer-events-none opacity-50 group-hover:opacity-100 transition-opacity">
+                    Zone réservée à l'illustration<br>
+                    <span class="text-[9px] mt-2 block font-bold not-italic">Vérifiez le chemin du fichier image</span>
                  </p>
             </div>
         </div>
     </section>
 
-    <!-- Section 2 : Démarche Scientifique (Audio à Droite) -->
+    <!-- Section 2 : Démarche Scientifique (Téléchargement PDF) -->
     <section class="py-32 bg-white border-y border-slate-200 section-reveal">
         <div class="max-w-6xl mx-auto px-6">
             <div class="grid lg:grid-cols-2 gap-24 items-center">
@@ -211,33 +179,28 @@
                     </div>
                 </div>
 
-                <!-- Lecteur Audio 1 -->
-                <div class="audio-container" id="audioCard1">
-                    <div class="flex items-center space-x-6 mb-8">
-                        <button onclick="toggleAudio('Audio1')" class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-xl hover:scale-105 transition-transform focus:outline-none">
-                            <svg id="play-icon-Audio1" class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4v12l10-6L7 4z"></path></svg>
-                            <svg id="pause-icon-Audio1" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
-                        </button>
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-900">Analyse Scientifique</h3>
-                            <p class="text-[10px] text-blue-500 uppercase tracking-widest font-bold">Théorie & Médiation</p>
+                <!-- Carte de Téléchargement Scientifique -->
+                <div class="download-card group">
+                    <!-- Fond décoratif -->
+                    <svg class="download-icon-bg" fill="currentColor" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                    
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 bg-blue-600 text-white rounded-2xl flex items-center justify-center mb-8 shadow-lg shadow-blue-500/20">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                         </div>
-                    </div>
-                    <div class="audio-visualizer">
-                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    </div>
-                    <div class="space-y-4">
-                        <input type="range" id="seek-bar-Audio1" value="0" step="0.1">
-                        <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <span id="current-time-Audio1">0:00</span>
-                            <span id="duration-Audio1">0:00</span>
-                        </div>
-                    </div>
-                    <audio id="mainAudio1"><source src="votre-audio-scientifique.mp3" type="audio/mpeg"></audio>
-                    <div class="mt-8 pt-6 border-t border-slate-100 flex justify-center">
-                        <button onclick="openTranscription('scientifique')" class="text-[9px] uppercase tracking-[0.2em] font-bold text-blue-600 hover:text-slate-900 transition">Lire la transcription</button>
+                        
+                        <h3 class="text-2xl font-serif italic text-slate-900 mb-2">Analyse Scientifique</h3>
+                        <p class="text-sm text-slate-500 mb-8 font-light leading-relaxed">
+                            Téléchargez le dossier complet détaillant l'étude anthropologique, les fondements théoriques et l'analyse détaillée des œuvres.
+                        </p>
+                        
+                        <!-- Bouton Téléchargement PDF -->
+                        <a href="H. Alexandre, L'Homme et la Mer - Une Odyssée Anthropologique, 2026.pdf" download class="btn-download block w-full py-5 bg-slate-900 text-white text-center rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-blue-600 shadow-xl flex items-center justify-center gap-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span>Télécharger le PDF</span>
+                        </a>
+                        
+                        <p class="text-[9px] text-slate-400 mt-4 text-center uppercase tracking-widest font-bold">Document de Recherche</p>
                     </div>
                 </div>
 
@@ -245,43 +208,36 @@
         </div>
     </section>
 
-    <!-- Section 3 : Démarche Technique (Audio à Gauche) -->
+    <!-- Section 3 : Démarche Technique (Téléchargement à Gauche) -->
     <section class="py-32 bg-slate-100/50 section-reveal">
         <div class="max-w-6xl mx-auto px-6">
             <div class="grid lg:grid-cols-2 gap-24 items-center">
                 
-                <!-- Lecteur Audio 2 (Technique) -->
-                <div class="audio-container" id="audioCard2">
-                    <div class="flex items-center space-x-6 mb-8">
-                        <button onclick="toggleAudio('Audio2')" class="w-16 h-16 bg-slate-900 rounded-full flex items-center justify-center text-white shadow-xl hover:scale-105 transition-transform focus:outline-none">
-                            <svg id="play-icon-Audio2" class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M7 4v12l10-6L7 4z"></path></svg>
-                            <svg id="pause-icon-Audio2" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
-                        </button>
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-900">Analyse Technique</h3>
-                            <p class="text-[10px] text-slate-500 uppercase tracking-widest font-bold">WebGL & Architecture</p>
+                <!-- Carte de Téléchargement Technique -->
+                <div class="download-card group order-2 lg:order-1">
+                    <!-- Fond décoratif -->
+                    <svg class="download-icon-bg" fill="currentColor" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                    
+                    <div class="relative z-10">
+                        <div class="w-16 h-16 bg-slate-900 text-white rounded-2xl flex items-center justify-center mb-8 shadow-lg">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
                         </div>
-                    </div>
-                    <div class="audio-visualizer">
-                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    </div>
-                    <div class="space-y-4">
-                        <input type="range" id="seek-bar-Audio2" value="0" step="0.1">
-                        <div class="flex justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            <span id="current-time-Audio2">0:00</span>
-                            <span id="duration-Audio2">0:00</span>
-                        </div>
-                    </div>
-                    <audio id="mainAudio2"><source src="Un_globe_3D_fluide_en_Vanilla_JS.mp3" type="audio/mpeg"></audio>
-                    <div class="mt-8 pt-6 border-t border-slate-100 flex justify-center">
-                        <button onclick="openTranscription('technique')" class="text-[9px] uppercase tracking-[0.2em] font-bold text-slate-900 hover:text-blue-600 transition">Lire la transcription</button>
+                        
+                        <h3 class="text-2xl font-serif italic text-slate-900 mb-2">Dossier Technique</h3>
+                        <p class="text-sm text-slate-500 mb-8 font-light">Téléchargez l'explication détaillée de l'architecture WebGL, du développement statique et de la conception "Mobile First".</p>
+                        
+                        <!-- Bouton Téléchargement PDF -->
+                        <a href="H. Alexandre, Documentation Technique - L'Odyssée Anthropologique, 2026.pdf" download class="btn-download block w-full py-5 bg-blue-600 text-white text-center rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-slate-900 shadow-xl flex items-center justify-center gap-3">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                            <span>Télécharger le PDF</span>
+                        </a>
+                        
+                        <p class="text-[9px] text-slate-400 mt-4 text-center uppercase tracking-widest font-bold">Rapport de Conception</p>
                     </div>
                 </div>
 
                 <!-- Explication Technique (Droite) -->
-                <div>
+                <div class="order-1 lg:order-2">
                     <span class="text-blue-600 font-bold uppercase tracking-[0.3em] text-[10px] mb-6 block text-left">La méthode</span>
                     <h2 class="text-4xl md:text-5xl mb-8 leading-tight font-serif italic text-slate-950 text-left">Comprendre notre <br>démarche technique</h2>
                     <p class="text-lg text-slate-600 leading-relaxed mb-10 font-light text-left">
@@ -303,19 +259,6 @@
             </div>
         </div>
     </section>
-
-    <!-- Modale de Transcription -->
-    <div id="transcription-modal">
-        <div class="bg-white w-full max-w-2xl mx-4 p-10 rounded-[2.5rem] shadow-2xl relative max-h-[80vh] overflow-y-auto">
-            <button onclick="closeTranscription()" class="absolute top-8 right-8 text-slate-400 hover:text-slate-950 transition">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
-            <h3 id="modal-title" class="text-3xl font-serif italic mb-8 text-slate-950">Transcription</h3>
-            <div id="modal-content" class="text-slate-600 leading-relaxed space-y-6 text-base font-light">
-                <!-- Rempli par JS -->
-            </div>
-        </div>
-    </div>
 
     <!-- Section Objectifs -->
     <section class="py-32 px-6 max-w-6xl mx-auto section-reveal">
@@ -353,85 +296,26 @@
             </div>
             <p class="text-slate-500 text-xs uppercase tracking-widest mb-12">Étude sur les Ruptures Épistémologiques du rapport Homme-Mer</p>
             <div class="pt-8 border-t border-white/5 text-[9px] text-slate-700 uppercase tracking-[0.4em]">
-                © 2026 — Projet de Médiation Culturelle Numérique
+                © 2026 — Alexandre Huberty — Projet de Médiation Culturelle Numérique
             </div>
         </div>
     </footer>
 
     <script>
-        // Reveal Animations
+        // Animation de révélation simple
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) entry.target.classList.add('visible');
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
             });
         }, { threshold: 0.1 });
+
         document.querySelectorAll('.section-reveal').forEach(el => observer.observe(el));
-
-        // --- GESTION AUDIO UNIFIÉE ---
-        const players = {
-            Audio1: { audio: document.getElementById('mainAudio1'), card: document.getElementById('audioCard1'), seekBar: document.getElementById('seek-bar-Audio1'), current: document.getElementById('current-time-Audio1'), duration: document.getElementById('duration-Audio1'), play: document.getElementById('play-icon-Audio1'), pause: document.getElementById('pause-icon-Audio1') },
-            Audio2: { audio: document.getElementById('mainAudio2'), card: document.getElementById('audioCard2'), seekBar: document.getElementById('seek-bar-Audio2'), current: document.getElementById('current-time-Audio2'), duration: document.getElementById('duration-Audio2'), play: document.getElementById('play-icon-Audio2'), pause: document.getElementById('pause-icon-Audio2') }
-        };
-
-        function formatTime(secs) {
-            if (!isFinite(secs)) return "0:00";
-            const min = Math.floor(secs / 60);
-            const sec = Math.floor(secs % 60);
-            return `${min}:${sec < 10 ? '0' : ''}${sec}`;
-        }
-
-        async function toggleAudio(id) {
-            const p = players[id];
-            try {
-                if (p.audio.paused) {
-                    // Mettre en pause les autres lecteurs avant d'en lancer un nouveau
-                    Object.keys(players).forEach(otherId => { if(otherId !== id) players[otherId].audio.pause(); });
-                    await p.audio.play();
-                } else {
-                    p.audio.pause();
-                }
-            } catch (err) { if (err.name !== 'AbortError') console.error("Audio error:", err); }
-        }
-
-        // Configuration des événements pour chaque lecteur
-        Object.keys(players).forEach(id => {
-            const p = players[id];
-            p.audio.onplay = () => { p.card.classList.add('playing'); p.play.classList.add('hidden'); p.pause.classList.remove('hidden'); };
-            p.audio.onpause = () => { p.card.classList.remove('playing'); p.play.classList.remove('hidden'); p.pause.classList.add('hidden'); };
-            p.audio.addEventListener('timeupdate', () => {
-                if (!isFinite(p.audio.duration)) return;
-                p.seekBar.value = (p.audio.currentTime / p.audio.duration) * 100;
-                p.current.innerText = formatTime(p.audio.currentTime);
-            });
-            p.audio.addEventListener('loadedmetadata', () => { p.duration.innerText = formatTime(p.audio.duration); });
-            p.seekBar.addEventListener('input', () => {
-                if (!isFinite(p.audio.duration)) return;
-                p.audio.currentTime = (parseFloat(p.seekBar.value) / 100) * p.audio.duration;
-            });
-        });
-
-        // --- GESTION TRANSCRIPTION ---
-        const transcripts = {
-            scientifique: { title: "Transcription : Démarche Scientifique", content: "<p>Notre recherche met en lumière un mouvement centripète : la mer, autrefois force extérieure et sacrée, devient un espace intérieur de conscience. Si à la Préhistoire la mer est une frontière nourricière, elle devient à la Renaissance un objet de mesure, avant de devenir aujourd'hui un espace de responsabilité écologique.</p>" },
-            technique: { title: "Transcription : Démarche Technique", content: "<p>Le choix du WebGL et de Three.js permet de manipuler 15 œuvres dans un espace sphérique sans latence. L'architecture est 'Data-Driven' : chaque point sur le globe est relié à une fiche d'œuvre via un ID unique, permettant une transition fluide vers le musée virtuel.</p>" }
-        };
-
-        function openTranscription(type) {
-            const modal = document.getElementById('transcription-modal');
-            document.getElementById('modal-title').innerText = transcripts[type].title;
-            document.getElementById('modal-content').innerHTML = transcripts[type].content;
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function closeTranscription() {
-            document.getElementById('transcription-modal').classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
     </script>
 </body>
-
 </html>
+
 
 
 
